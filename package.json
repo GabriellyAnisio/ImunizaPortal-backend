@@ -2,11 +2,14 @@
   "name": "imunizaportal-backend",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/index.mjs",
   "scripts": {
     "test": "npm test",
-    "start": "node index.js",
-    "dev": "npm start --watch"
+    "start": "node --env-file=.env src/index.mjs",
+    "dev": "nodemon --env-file=.env src/index.mjs",
+    "prisma:generate": "prisma generate",
+    "prisma:studio": "prisma studio",
+    "prisma:migrate": "prisma migrate --dev"
   },
   "author": "Maria Gabrielly",
   "license": "ISC",
