@@ -12,3 +12,21 @@ datasource db {
   provider = "sqlite"
   url      = "file:./dev.db"
 }
+
+model Patient {
+  id          String          @id @default(uuid())
+  name        String
+  birthDate   DateTime
+  appointments Appointment[]
+}
+
+model Appointment {
+  id          String        @id @default(uuid())
+  date        DateTime
+  timeSlot    String
+  status      String     @default("scheduled") // scheduled, completed, or missed
+  patientId   String
+  patient     Patient    @relation(fields: [patientId], references: [id])
+
+  @@unique([date, timeSlot, patientId])
+}
