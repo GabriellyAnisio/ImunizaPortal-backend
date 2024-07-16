@@ -6,5 +6,6 @@ const routes = Router();
 const appointmentController = new AppointmentController();
 
 routes.post('/api/appointment', (request, response) => appointmentController.store(request, response));
+routes.get('/api/appointment', (request, response) => appointmentController.index(request, response));
 
 export default routes;
