@@ -22,11 +22,10 @@ model Patient {
 
 model Appointment {
   id          String        @id @default(uuid())
-  date        DateTime
-  timeSlot    String
+  dateTime    DateTime
   status      String     @default("scheduled") // scheduled, completed, or missed
   patientId   String
   patient     Patient    @relation(fields: [patientId], references: [id])
 
-  @@unique([date, timeSlot, patientId])
+  @@unique([dateTime, patientId])
 }
