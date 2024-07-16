@@ -4,11 +4,13 @@ import prismaClient from '../utils/prismaClient.mjs';
 class AppointmentController {
 
     async store(request, response) {
-        const { name, birthDate, date, timeSlot } = request.body;
+        const { name, birthDate, dateTime } = request.body;
         
         try {
             const existingAppointments = await prismaClient.appointment.count({
-              where: { date: new Date(date), timeSlot }
+              where: { 
+                dateTime: new Date(dateTime), 
+              }
             });
         
             if (existingAppointments >= 2) {
@@ -24,8 +26,7 @@ class AppointmentController {
         
             const newAppointment = await prismaClient.appointment.create({
               data: {
-                date: new Date(date),
-                timeSlot,
+                dateTime: new Date(dateTime),
                 patientId: patient.id
               }
             });
