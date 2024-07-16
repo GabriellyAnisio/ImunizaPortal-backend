@@ -65,6 +65,18 @@ class AppointmentController {
       }
     }
     
+    async getOne(request, response) {
+      const { id } = request.params;
+  
+      const appointment = await prismaClient.appointment.findUnique({ where: { id } });
+  
+      if (!appointment) {
+        throw new AppError('Appointment not found', 404);
+      }
+  
+      response.send(appointment);
+    }
+
 }
 
 export default AppointmentController;
