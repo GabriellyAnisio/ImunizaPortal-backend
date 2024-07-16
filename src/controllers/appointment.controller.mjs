@@ -36,6 +36,35 @@ class AppointmentController {
             response.status(500).json({ error: error.message });
           }
     }
+
+    async index(request, response) {
+
+      let { page = 1, pageSize = 20 } = request.query;
+
+      page = parseInt(page);
+      pageSize = parseInt(pageSize);
+
+      try {
+        const [appointmentsCount, appointments] = await Promise.all([
+          prismaClient.appointment.count(),
+          prismaClient.appointment.findMany({ 
+            take: pageSize, 
+            include: { patient: true}, 
+            orderBy: { dateTime: 'asc'}})
+        ]);
+    
+        response.send({
+          page,
+          pageSize,
+          totalCount: appointmentsCount,
+          items: appointments,
+        });
+        
+      } catch (error) {
+        response.status(500).json({ error: error.message });
+      }
+    }
+    
 }
 
 export default AppointmentController;
