@@ -83,7 +83,7 @@ class AppointmentController {
     const appointment = await prismaClient.appointment.findUnique({ where: { id } });
 
     if (!appointment) {
-      throw new AppError('Appointment not found', 404);
+      return response.status(404).json({ message: 'Appointment not found.' });
     }
 
     response.send(appointment);
@@ -139,7 +139,33 @@ class AppointmentController {
       response.status(500).json({ error: error.message });
     }
   }
-
+  
+    async destroy(request, response) {
+      const { id } = request.params;
+  
+      try {
+        const appointment = await prismaClient.appointment.findUnique({
+          where: { id },
+          include: { patient: true }
+        });
+  
+        if (!appointment) {
+          return response.status(404).json({ message: 'Appointment not found.' });
+        }
+  
+        await prismaClient.appointment.delete({
+          where: { id }
+        });
+  
+        await prismaClient.patient.delete({
+            where: { id: appointment.patientId }
+        });
+  
+        response.json({ message: 'Success.' });
+      } catch (error) {
+        response.status(500).json({ error: error.message });
+      }
+    }
 }
 
 export default AppointmentController;
