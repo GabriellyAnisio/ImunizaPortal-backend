@@ -1,5 +1,5 @@
-//import { z } from 'zod';
 import prismaClient from '../utils/prismaClient.mjs';
+//const prismaClient = require('../utils/prismaClient.mjs');
 
 class AppointmentController {
   async store(request, response) {
@@ -9,7 +9,10 @@ class AppointmentController {
 
     try {
       const existingAppointmentsAtTime = await prismaClient.appointment.count({
-        where: { dateTime: date }
+        where: { 
+          status: 'scheduled', 
+          dateTime: date 
+        }
       });
 
       if (existingAppointmentsAtTime >= 2) {
@@ -18,6 +21,7 @@ class AppointmentController {
 
       const existingAppointmentsOnDay = await prismaClient.appointment.count({
         where: {
+          status: 'scheduled',
           dateTime: {
             gte: dateOnly,
             lt: new Date(dateOnly.getTime() + 24 * 60 * 60 * 1000)
@@ -25,7 +29,7 @@ class AppointmentController {
         }
       });
 
-      if (existingAppointmentsOnDay >= 2) {
+      if (existingAppointmentsOnDay >= 20) {
         return response.status(400).json({ message: 'The day is already full.' });
       }
 
@@ -169,3 +173,4 @@ class AppointmentController {
 }
 
 export default AppointmentController;
+//module.exports = AppointmentController;
