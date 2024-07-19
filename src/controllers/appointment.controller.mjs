@@ -104,7 +104,7 @@ class AppointmentController {
     const { status, dateTime } = request.body;
     const { id } = request.params;
     const date = new Date(dateTime);
-    const dateOnly = new Date(date.toDateString()); 
+    const dateOnly = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
 
     try {
       const appointment = await prismaClient.appointment.findUnique({ where: { id } });
@@ -133,11 +133,11 @@ class AppointmentController {
 
         const existingAppointmentsOnDay = await prismaClient.appointment.count({
           where: {
+            status: 'scheduled',
             dateTime: {
-             // gte: dateOnly,
-              lte: new Date("2024-07-16")
-            },
-            status: 'scheduled'
+              gte: dateOnly,
+              lt: new Date(dateOnly.getTime() + 24 * 60 * 60 * 1000)
+            }
           }
         });
 
