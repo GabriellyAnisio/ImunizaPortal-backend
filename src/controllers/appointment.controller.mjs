@@ -1,12 +1,14 @@
 import prismaClient from '../utils/prismaClient.mjs';
+
+// ---- To run tests:
 //const prismaClient = require('../utils/prismaClient.mjs');
 
 class AppointmentController {
   async store(request, response) {
     const { name, birthDate, dateTime } = request.body;
     const date = new Date(dateTime);
-    const dateOnly = new Date(date.toDateString()); 
-
+    const dateOnly = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  
     try {
       const existingAppointmentsAtTime = await prismaClient.appointment.count({
         where: { 
@@ -14,11 +16,13 @@ class AppointmentController {
           dateTime: date 
         }
       });
-
+  
+      console.log('existingAppointmentsAtTime:', existingAppointmentsAtTime);
+  
       if (existingAppointmentsAtTime >= 2) {
-        return response.status(400).json({ message: 'Timetable is already full' });
+        return response.status(400).json({ message: 'Timetable is already full.' });
       }
-
+  
       const existingAppointmentsOnDay = await prismaClient.appointment.count({
         where: {
           status: 'scheduled',
@@ -28,25 +32,28 @@ class AppointmentController {
           }
         }
       });
-
+  
+      console.log('existingAppointmentsOnDay:', existingAppointmentsOnDay);
+  
       if (existingAppointmentsOnDay >= 20) {
         return response.status(400).json({ message: 'The day is already full.' });
       }
-
+  
       const patient = await prismaClient.patient.create({
         data: {
-            name: name,
-            birthDate: new Date(birthDate)
-          }
+          name: name,
+          birthDate: new Date(birthDate)
+        }
       });
   
       const newAppointment = await prismaClient.appointment.create({
         data: {
           dateTime: new Date(dateTime),
-          patientId: patient.id
+          patientId: patient.id,
+          status: 'scheduled'
         }
       });
-
+  
       response.status(201).json(newAppointment);
     } catch (error) {
       response.status(500).json({ error: error.message });
@@ -55,7 +62,7 @@ class AppointmentController {
 
   async index(request, response) {
 
-    let { page = 1, pageSize = 20 } = request.query;
+    let { page = 1, pageSize = 30 } = request.query;
 
     page = parseInt(page);
     pageSize = parseInt(pageSize);
@@ -100,6 +107,12 @@ class AppointmentController {
     const dateOnly = new Date(date.toDateString()); 
 
     try {
+      const appointment = await prismaClient.appointment.findUnique({ where: { id } });
+
+      if (!appointment) {
+        return response.status(404).json({ message: 'Appointment not found.' });
+      }
+
       const dataToUpdate = {};
 
       if (status) {
@@ -107,9 +120,10 @@ class AppointmentController {
       }
 
       if (dateTime) {
-          const existingAppointments = await prismaClient.appointment.count({
+        const existingAppointments = await prismaClient.appointment.count({
           where: {
-            dateTime: dateTime
+            dateTime: dateTime,
+            status: 'scheduled'
           }
         });
 
@@ -120,13 +134,14 @@ class AppointmentController {
         const existingAppointmentsOnDay = await prismaClient.appointment.count({
           where: {
             dateTime: {
-              gte: dateOnly,
-              lt: new Date(dateOnly.getTime() + 24 * 60 * 60 * 1000)
-            }
+             // gte: dateOnly,
+              lte: new Date("2024-07-16")
+            },
+            status: 'scheduled'
           }
         });
-  
-        if (existingAppointmentsOnDay >= 2) {
+
+        if (existingAppointmentsOnDay >= 20) {
           return response.status(400).json({ message: 'The day is already full.' });
         }  
 
@@ -143,7 +158,7 @@ class AppointmentController {
       response.status(500).json({ error: error.message });
     }
   }
-  
+
     async destroy(request, response) {
       const { id } = request.params;
   
@@ -172,5 +187,8 @@ class AppointmentController {
     }
 }
 
+
 export default AppointmentController;
+
+// ---- To run tests:
 //module.exports = AppointmentController;

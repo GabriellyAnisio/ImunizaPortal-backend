@@ -17,13 +17,69 @@ app.delete('/api/appointment/:id', (req, res) => appointmentController.destroy(r
 describe('Appointment Controller', () => {
   let testAppointmentId;
 
+  it('should return an error when the timetable is already full', async () => {
+    await request(app)
+      .post('/api/appointment')
+      .send({
+        name: 'John Doe 1',
+        birthDate: '1990-01-01',
+        dateTime: '2024-07-23T10:00:00.000Z'
+      });
+  
+    await request(app)
+      .post('/api/appointment')
+      .send({
+        name: 'John Doe 2',
+        birthDate: '1990-01-01',
+        dateTime: '2024-07-23T10:00:00.000Z'
+      });
+  
+    const response = await request(app)
+      .post('/api/appointment')
+      .send({
+        name: 'John Doe 3',
+        birthDate: '1990-01-01',
+        dateTime: '2024-07-23T10:00:00.000Z'
+      });
+  
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty('message', 'Timetable is already full.');
+  });
+
+  
+  it('should return an error when the day is already full', async () => {
+    for (let i = 0; i < 20; i++) {
+      const res = await request(app)
+        .post('/api/appointment')
+        .send({
+          name: `Marylin Smith ${i}`,
+          birthDate: '1990-01-01',
+          dateTime: `2024-07-16T${i < 10 ? '0' + i : i}:00:00.000Z` 
+        });
+      console.log(`Response ${i}:`, res.status, res.body);
+    }
+    const response = await request(app)
+      .post('/api/appointment')
+      .send({
+        name: 'John Doe 2',
+        birthDate: '1990-01-01',
+        dateTime: '2024-07-16T20:00:00.000Z'
+      });
+  
+    console.log('Final response:', response.status, response.body);
+    
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty('message', 'The day is already full.');
+  });
+  
+    
   it('should create a new appointment', async () => {
     const response = await request(app)
       .post('/api/appointment')
       .send({
         name: 'John Doe',
         birthDate: '1990-01-01',
-        dateTime: '2024-07-16T10:00:00.000Z'
+        dateTime: '2024-07-15T10:00:00.000Z'
       });
 
     expect(response.status).toBe(201);
@@ -67,4 +123,33 @@ describe('Appointment Controller', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('message', 'Success.');
   });
+  
+  it('should return an error when the appointment is not found', async () => {
+    const response = await request(app)
+      .get('/api/appointment/non-existing-id');
+  
+    expect(response.status).toBe(404);
+    expect(response.body).toHaveProperty('message', 'Appointment not found.');
+  });
+
+  it('should return an error when trying to update a non-existing appointment', async () => {
+    const response = await request(app)
+      .put('/api/appointment/non-existing-id')
+      .send({
+        status: 'completed',
+        dateTime: '2024-07-16T09:00:00.000Z'
+      });
+  
+    expect(response.status).toBe(404); 
+  });
+
+  it('should return an error when trying to delete a non-existing appointment', async () => {
+    const response = await request(app)
+      .delete('/api/appointment/non-existing-id');
+  
+    expect(response.status).toBe(404);
+    expect(response.body).toHaveProperty('message', 'Appointment not found.');
+  });
+  
+  
 });
