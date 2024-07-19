@@ -109,12 +109,71 @@ describe('Appointment Controller', () => {
       .put(`/api/appointment/${testAppointmentId}`)
       .send({
         status: 'completed',
-        dateTime: '2024-07-16T09:00:00.000Z'
+        dateTime: '2024-12-16T09:00:00.000Z'
       });
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('status', 'completed');
   });
+
+  it('should return an error when the timetable is already full when updating', async () => {
+    await request(app)
+      .post('/api/appointment')
+      .send({
+        name: 'Margaret 1',
+        birthDate: '1990-01-01',
+        dateTime: '2024-01-16T10:00:00.000Z'
+      });
+  
+    await request(app)
+      .post('/api/appointment')
+      .send({
+        name: 'Margaret 2',
+        birthDate: '1990-01-01',
+        dateTime: '2024-01-16T10:00:00.000Z'
+      });
+  
+    const responseCreate = await request(app)
+      .post('/api/appointment')
+      .send({
+        name: 'Margaret 3',
+        birthDate: '1990-01-01',
+        dateTime: '2024-01-16T11:00:00.000Z'
+      });
+  
+    const appointmentId = responseCreate.body.id;
+  
+    const responseUpdate = await request(app)
+      .put(`/api/appointment/${appointmentId}`)
+      .send({
+        dateTime: '2024-01-16T10:00:00.000Z'
+      });
+  
+    expect(responseUpdate.status).toBe(400);
+    expect(responseUpdate.body).toHaveProperty('message', 'Timetable is already full');
+  });
+  
+  it('should return an error when the day is already full when updating', async () => {
+    const responseCreate = await request(app)
+      .post('/api/appointment')
+      .send({
+        name: 'Lucas Santos',
+        birthDate: '1990-01-01',
+        dateTime: '2024-01-16T20:00:00.000Z'
+      });
+  
+    const appointmentId = responseCreate.body.id;
+  
+    const responseUpdate = await request(app)
+      .put(`/api/appointment/${appointmentId}`)
+      .send({
+        dateTime: '2024-07-16T15:00:00.000Z'
+      });
+  
+    expect(responseUpdate.status).toBe(400);
+    expect(responseUpdate.body).toHaveProperty('message', 'The day is already full.');
+  });
+  
 
   it('should delete an appointment', async () => {
     const response = await request(app)
