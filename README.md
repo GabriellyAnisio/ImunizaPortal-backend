@@ -45,7 +45,7 @@ Diante da alta demanda por vacinas contra COVID-19, nossa cidade precisa de um s
 2. **Navegue para o diretório do projeto**:
 
     ```bash
-    cd projeto-agendamento
+    cd ImunizaPortal-backend
     ```
 
 3. **Instale as dependências**:
